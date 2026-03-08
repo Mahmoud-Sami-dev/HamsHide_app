@@ -11,8 +11,7 @@ import {
   generateTokens,
   verifyToken,
 } from "../../common/index.js";
-import { encryption } from "../../common/utils/encryption.utils.js";
-//import { sendOTPEmail } from "../../common/utils/email.utils.js";
+import { encryption, sendOTPEmail } from "../../common/utils/index.js";
 const router = Router();
 //signup >> check user >> create user
 router.post("/signup", async (req, res, next) => {

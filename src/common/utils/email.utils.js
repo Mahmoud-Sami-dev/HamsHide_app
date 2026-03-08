@@ -7,7 +7,7 @@ export async function sendOTPEmail(toEmail, otp) {
     secure:true,
     auth:{
         user: "nassefm807@gmail.com",
-        pass: "1234567"
+        pass: "ukkz crkz vejc mkba"
     },
    
   });
