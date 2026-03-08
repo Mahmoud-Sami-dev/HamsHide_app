@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { checkUserExist, createUser } from "../user/user.service.js";
+import { checkUserExist, createUser, getProfile } from "../user/user.service.js";
 import {
   BadRequestException,
   ConflictException,
@@ -86,6 +86,23 @@ router.get("/refresh-token", (req, res, next) => {
     message: "token refresh successfully",
     success: true,
     data: { accessToken, refreshToken },
+  });
+});
+
+router.post("/verify-otp", async (req, res, next) => {
+  const { email, otp } = req.body;
+  const user = await getProfile({ email });
+
+  if (!user) throw new NotFoundException(SYS_MESSAGE.user.alreadyExist);
+  if (user.otp != otp) throw new BadRequestException("Invalid OTP");
+
+  user.isVerified = true;
+  user.otp = null;
+  await user.save();
+
+  return res.status(200).json({
+    message: "Account verified successfully",
+    success: true,
   });
 });
 export default router;

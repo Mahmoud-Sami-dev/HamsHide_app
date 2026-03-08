@@ -42,6 +42,10 @@ const schema = new Schema(
         return true;
       },
     },
+    otp: {
+      type: Number,
+      required: false,
+    },
   },
   {
     timestamps: true,
