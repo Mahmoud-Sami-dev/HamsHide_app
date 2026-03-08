@@ -26,10 +26,10 @@ router.post("/signup", async (req, res, next) => {
   //fail case
   if (userExist) throw new ConflictException(SYS_MESSAGE.user.alreadyExist);
   //generate OTP
-  //const otp = Math.floor(100000 + Math.random() * 90000);
+  const otp = Math.floor(100000 + Math.random() * 90000);
   //send OTP email
-  //await sendOTPEmail(email, otp);
-  //req.body.otp = otp;
+  await sendOTPEmail(email, otp);
+  req.body.otp = otp;
   //prepare data - validation - hashing password
   req.body.role = SYS_ROLE.user; //0 || 1 >> 0
   req.body.password = await hash(req.body.password);

@@ -25,9 +25,9 @@ app.listen(port, () => {
   console.log("application is running on port", port);
 });
 
-const encData = encryption("Mahmoud");
-console.log({ encData });
-const decData = decryption(
-  "bed033eb1a31cb2608d0b6190df0000d:40c1bafe05a127097a5405056f7fc64d",
-);
-console.log(decData);
+// const encData = encryption("Mahmoud");
+// console.log({ encData });
+// const decData = decryption(
+//   "bed033eb1a31cb2608d0b6190df0000d:40c1bafe05a127097a5405056f7fc64d",
+// );
+// console.log(decData);
