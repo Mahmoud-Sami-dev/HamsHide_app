@@ -1,21 +1,19 @@
 import nodemailer from "nodemailer";
-
-export async function sendOTPEmail(toEmail, otp) {
+export const sendMail = async ({ to, subject, html } = {}) => {
   const transporter = nodemailer.createTransport({
+    service: "gmail",
     host: "smtp.gmail.com",
-    port: 465,
-    secure:true,
-    auth:{
-        user: "nassefm807@gmail.com",
-        pass: "ukkz crkz vejc mkba"
+    port: 587,
+    auth: {
+      user: "nassefm807@gmail.com",
+      pass: "yytn ujkl pewy kjis",
     },
-   
   });
-  const mailOptions={
-    from:"nassefm807@gmail.com",
-    to: toEmail,
-    subject: "OTP Verification",
-    text:`Your OTP code is: ${otp}`,
-  };
-  await transporter.sendMail(mailOptions);
-}
+
+  await transporter.sendMail({
+    from: '"saraha app"<nassefm807@gmail.com>',
+    to,
+    subject,
+    html,
+  });
+};

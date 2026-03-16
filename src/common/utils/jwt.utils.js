@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
-
+import crypto from "node:crypto";
 export function signToken(payload, secret, options) {
+  payload.jti = crypto.randomBytes(10).toString("hex");
   return jwt.sign(payload, secret, options);
 }
 export function verifyToken(token, secret) {
@@ -14,7 +15,7 @@ export function generateTokens(payload) {
     {
       issuer: "whatsapp.com",
       audience: ["instagram.com", "facebook.com"],
-      expiresIn: 60,
+      expiresIn: 30,
     },
   );
   const refreshToken = signToken(

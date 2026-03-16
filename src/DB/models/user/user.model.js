@@ -42,14 +42,21 @@ const schema = new Schema(
         return true;
       },
     },
-    otp: {
-      type: Number,
-      required: false,
+    profilePic: String,
+    isEmailVerified: {
+      type: Boolean,
+      default: false,
+    },
+    credentialsUpdatedAt: {
+      type: Date,
+      default: Date.now(),
     },
   },
   {
-    timestamps: true,
-    // strict: false,
+    strict: true,
+    timestamps: true, // createdAt , updatedAt
+    // versionKey: "doc_version" ,
+    optimisticConcurrency: true,
   },
 );
 

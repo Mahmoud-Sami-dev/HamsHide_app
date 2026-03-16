@@ -6,7 +6,9 @@ const port = 3000;
 
 connectDB();
 
-//parsing data from req
+app.use("/uploads", express.static("uploads"));
+
+//parsing data from req >> from body >> raw
 app.use(express.json());
 
 //routing
@@ -16,9 +18,12 @@ app.use("/user", userRouter);
 app.use((error, req, res, next) => {
   if (error.message == "jwt expired")
     error.message = "token expired & please login again";
-  return res
-    .status(error.cause || 500)
-    .json({ message: error.message, stack: error.stack, success: false });
+  return res.status(error.cause || 500).json({
+    message: error.message,
+    details: error.details?.length == 0 ? undefined : error.details,
+    stack: error.stack,
+    success: false,
+  });
 });
 
 app.listen(port, () => {

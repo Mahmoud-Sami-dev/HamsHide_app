@@ -1,3 +1,5 @@
+import { User } from "./models/user/user.model.js";
+
 export class DBRepository {
   nModel;
   constructor(model) {
@@ -8,7 +10,7 @@ export class DBRepository {
     return await doc.save();
   }
 
-  async update(filter, update, options = {}) {
+  async update(filter, update, options = { new: true }) {
     return await User.findOneAndUpdate(filter, update, options);
   }
 
@@ -24,5 +26,3 @@ export class DBRepository {
     return await this.nModel.deleteOne(filter);
   }
 }
-
-
