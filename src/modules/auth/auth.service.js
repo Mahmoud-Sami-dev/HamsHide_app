@@ -1,3 +1,4 @@
+import { OAuth2Client } from "google-auth-library";
 import {
   BadRequestException,
   compare,
@@ -13,22 +14,26 @@ import { userRepository } from "../../DB/index.js";
 import { otpRepository } from "../../DB/models/otp/otp.repository.js";
 import { tokenRepository } from "../../DB/models/token/token.repository.js";
 import { checkUserExist, createUser } from "../user/user.service.js";
+import { redisClient } from "../../DB/redis.connection.js";
 
 export async function sendOTP(body) {
   const { email } = body;
   // otp valid >> DB
-  const otpDoc = await otpRepository.getOne({ email });
+  //   const otpDoc = await otpRepository.getOne({ email });
+  const otpDoc = await redisClient.exists(`${email}:otp`); // {userData} >> {otp}
+
   if (otpDoc) {
     throw new BadRequestException("cannot send otp your otp still valid");
   }
   // create new otp
   const otp = Math.floor(100000 + Math.random() * 900000);
   // save into db
-  await otpRepository.create({
-    email,
-    otp,
-    expiresAt: Date.now() + 1 * 60 * 1000,
-  });
+  await redisClient.set(`${email}:otp`, otp, { EX: 2 * 60 });
+  //   await otpRepository.create({
+  //     email,
+  //     otp,
+  //     expiresAt: Date.now() + 1 * 60 * 1000,
+  //   });
   // send email
   await sendMail({
     to: email,
@@ -57,8 +62,10 @@ export const signup = async (body) => {
   }
   //OTP >> create otp >> save into DB >> send email to user
   await sendOTP({ email });
-  //create user
-  return await createUser(body); // not verified
+
+  //create user into DB
+  // return await createUser(body); // not verified
+  await redisClient.set(email, JSON.stringify(body), { EX: 2 * 24 * 60 * 60 }); // cashing
 };
 
 export const login = async (body) => {
@@ -84,19 +91,24 @@ export const login = async (body) => {
 
 export const verifyAccount = async (body) => {
   const { otp, email } = body;
-  const otpDoc = await otpRepository.getOne({ email });
+  //   const otpDoc = await otpRepository.getOne({ email });
+  const otpDoc = await redisClient.get(`${email}:otp`);
   if (!otpDoc) throw new BadRequestException("expired otp!");
-  if (otp != otpDoc.otp) {
-    otpDoc.attempts += 1;
-    if (otpDoc.attempts > 3) {
-      await otpRepository.deleteOne({ _id: otpDoc._id });
-      throw new BadRequestException("too many tries!");
-    }
-    await otpDoc.save();
+  if (otp != otpDoc) {
+    // otpDoc.attempts += 1;
+    // if (otpDoc.attempts > 3) {
+    //   await otpRepository.deleteOne({ _id: otpDoc._id });
+    //   throw new BadRequestException("too many tries!");
+    // }
+    // await otpDoc.save();
     throw new BadRequestException("invalid otp!");
   }
-  await userRepository.update({ email }, { isEmailVerified: true });
-  await otpRepository.deleteOne({ _id: otpDoc._id });
+  //await userRepository.update({ email }, { isEmailVerified: true });
+  let data = await redisClient.get(email);
+  await userRepository.create(JSON.parse(data));
+  await redisClient.del(email);
+  await redisClient.del(`${email}:otp`);
+  //   await otpRepository.deleteOne({ _id: otpDoc._id });
   return true;
 };
 
@@ -109,9 +121,50 @@ export const logoutFromAllDevices = async (user) => {
 };
 
 export const logout = async (tokenPayload, user) => {
-  await tokenRepository.create({
-    token: tokenPayload.jti,
-    userId: user._id,
-    expiresAt: tokenPayload.exp * 1000,
+  //   await tokenRepository.create({
+  //     token: tokenPayload.jti,
+  //     userId: user._id,
+  //     expiresAt: tokenPayload.exp * 1000,
+  //   });
+  await redisClient.set(`bl_${tokenPayload.jti}`, tokenPayload.jti, {
+    EX: Math.floor(
+        (new Data(tokenPayload.exp * 1000).getTime() - Date.now())/1000
+    ),
+  });
+};
+
+async function googleVerifyToken(idToken) {
+  const client = new OAuth2Client("clint id from frontend");
+  const ticket = await client.verifyIdToken({ idToken });
+  return ticket.getPayload();
+}
+export const loginWithGoogle = async (idToken) => {
+  //token verify google >> false >> error
+  const payload = await googleVerifyToken(idToken);
+  if (payload.email_verified == false) {
+    throw new BadRequestException("refused email from google");
+  }
+  //check user exit
+  const user = await userRepository.getOne({ email: payload.email }); // {} | null
+  //new user >> create >> create tokens { accessToken, refresh }
+  if (!user) {
+    const createdUser = await userRepository.create({
+      email: payload.email,
+      profilePic: payload.picture,
+      userName: payload.name,
+      isEmailVerified: true,
+      provider: "google",
+    });
+    return generateTokens({
+      sub: createdUser._id,
+      role: createdUser.role,
+      provider: createUser.provider,
+    });
+  }
+  //create tokens { accessToken, refresh }
+  return generateTokens({
+    sub: user._id,
+    role: user.role,
+    provider: user.provider,
   });
 };

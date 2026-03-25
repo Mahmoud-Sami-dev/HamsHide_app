@@ -6,6 +6,7 @@ import {
 } from "../common/index.js";
 import { userRepository } from "../DB/index.js";
 import { tokenRepository } from "../DB/models/token/token.repository.js";
+import { redisClient } from "../DB/redis.connection.js";
 
 export const isAuthenticated = async (req, res, next) => {
   // isAuthenticated function Middleware
@@ -30,8 +31,8 @@ export const isAuthenticated = async (req, res, next) => {
   if (new Date(user.credentialsUpdatedAt).getTime() > payload.iat * 1000) {
     throw new BadRequestException("invalid token!");
   }
-  const tokenExist = await tokenRepository.getOne({ token: payload.jti });
-  if (tokenExist) throw new BadRequestException("invalid token");
+  const tokenExist = await redisClient.get(`bl_${payload.jti}`);
+  if (tokenExist) throw new BadRequestException("revoked token");
   // inject user data
   req.user = user;
   req.payload = payload;

@@ -18,6 +18,7 @@ import { isValid } from "../../middlewares/validation.middleware.js";
 import { fileUpload } from "../../common/utils/multer.utils.js";
 import {
   login,
+  loginWithGoogle,
   logout,
   logoutFromAllDevices,
   sendOTP,
@@ -107,5 +108,17 @@ router.post("/logout", isAuthenticated, async (req, res, next) => {
   return res
     .status(200)
     .json({ message: "logout successfully", success: true });
+});
+
+router.post("/signup-with-google", async (req, res, next) => {
+  const { idToken } = req.body;
+  const { accessToken, refreshToken } = await loginWithGoogle(idToken);
+  return res
+    .status(200)
+    .json({
+      message: "login successfully",
+      success: true,
+      data: { accessToken, refreshToken },
+    });
 });
 export default router;

@@ -1,8 +1,9 @@
 import mongoose from "mongoose";
+import { DB_URL } from "../config/env.config.js";
 
 export function connectDB() {
   mongoose
-    .connect("mongodb://127.0.0.1:27017/saraha")
+    .connect(DB_URL)
     .then(() => {
       console.log("DB connected successfully");
     })

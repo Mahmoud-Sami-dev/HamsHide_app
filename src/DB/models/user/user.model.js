@@ -17,9 +17,17 @@ const schema = new Schema(
       trim: true,
       lowercase: true,
     },
+    provider: {
+      type: String,
+      enum: ["google", "system"],
+      default: "system",
+    },
     password: {
       type: String,
-      required: true,
+      required: function () {
+        if (this.provider == "google") return false;
+        return true;
+      },
     },
     gender: {
       type: Number,
@@ -45,7 +53,7 @@ const schema = new Schema(
     profilePic: String,
     isEmailVerified: {
       type: Boolean,
-      default: false,
+      default: true,
     },
     credentialsUpdatedAt: {
       type: Date,
