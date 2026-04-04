@@ -1,4 +1,4 @@
-import multer, { diskStorage } from "multer";
+import multer, { diskStorage } from "multer"; //multer >> file upload middleware (Busboy[parsing multipart form data])
 import fs from "node:fs";
 import { BadRequestException } from "./error.utils.js";
 export const fileUpload = (
@@ -16,10 +16,14 @@ export const fileUpload = (
       destination: (req, file, cb) => {
         // req >> user
         //create folder
-        if (!fs.existsSync(`uploads/${req.user._id}`)) {
-          fs.mkdirSync(`uploads/${req.user._id}`);
+        const folder = req.user
+          ? `uploads/${req.user._id}`
+          : `uploads/${req.params.receiverId}/messages`;
+
+        if (!fs.existsSync(folder)) {
+          fs.mkdirSync(folder, { recursive: true });
         }
-        cb(null, `uploads/${req.user._id}`);
+        cb(null, folder);
       }, // string >> "uploads" >> function
       filename: (req, file, cb) => {
         console.log({ "file information before multer upload": file }); //information about file

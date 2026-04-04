@@ -9,6 +9,8 @@ import {
   sendMail,
   SYS_MESSAGE,
   SYS_ROLE,
+  UnauthorizedException,
+  verifyToken,
 } from "../../common/index.js";
 import { userRepository } from "../../DB/index.js";
 import { otpRepository } from "../../DB/models/otp/otp.repository.js";
@@ -128,7 +130,7 @@ export const logout = async (tokenPayload, user) => {
   //   });
   await redisClient.set(`bl_${tokenPayload.jti}`, tokenPayload.jti, {
     EX: Math.floor(
-        (new Data(tokenPayload.exp * 1000).getTime() - Date.now())/1000
+      (new Data(tokenPayload.exp * 1000).getTime() - Date.now()) / 1000,
     ),
   });
 };
@@ -167,4 +169,28 @@ export const loginWithGoogle = async (idToken) => {
     role: user.role,
     provider: user.provider,
   });
+};
+
+export const refreshTokenService = async (authorization) => {
+  // check token valid
+  const payload = verifyToken(
+    authorization,
+    "aihuujgbvvvbcfujuujbjvjudvujjjjeuvjb",
+  ); //valid - expire
+  const cashedRefreshToken = await redisClient.get(
+    `refreshToken:${payload.sub}`,
+  );
+  if (cashedRefreshToken != authorization) {
+    await logoutFromAllDevices({ _id: payload.sub });
+    await redisClient.del(`refreshToken:${payload.sub}`);
+    throw new UnauthorizedException(
+      "you are not authorized",
+    );
+  }
+  // payload token refresh >> iat & exp
+  delete payload.iat;
+  delete payload.exp;
+  const { accessToken, refreshToken } = generateTokens(payload);
+  await redisClient.set(`refreshToken:${payload.sub}`, refreshToken);
+  return { accessToken, refreshToken };
 };

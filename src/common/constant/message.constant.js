@@ -12,4 +12,5 @@ const generateMessage = (entity) => {
 };
 export const SYS_MESSAGE = {
   user: generateMessage("User"),
+  message: generateMessage("message"),
 };

@@ -21,6 +21,7 @@ import {
   loginWithGoogle,
   logout,
   logoutFromAllDevices,
+  refreshTokenService,
   sendOTP,
   signup,
   verifyAccount,
@@ -58,18 +59,10 @@ router.post(
   },
 );
 
-router.get("/refresh-token", (req, res, next) => {
+router.get("/refresh-token", async (req, res, next) => {
   //req.headers
   const { authorization } = req.headers; //refresh token
-  // check token valid
-  const payload = verifyToken(
-    authorization,
-    "aihuujgbvvvbcfujuujbjvjudvujjjjeuvjb",
-  ); //valid - expire
-  // payload token refresh >> iat & exp
-  delete payload.iat;
-  delete payload.exp;
-  const { accessToken, refreshToken } = generateTokens(payload);
+  const { accessToken, refreshToken } = await refreshTokenService(authorization);
   return res.status(200).json({
     message: "token refresh successfully",
     success: true,
@@ -113,12 +106,10 @@ router.post("/logout", isAuthenticated, async (req, res, next) => {
 router.post("/signup-with-google", async (req, res, next) => {
   const { idToken } = req.body;
   const { accessToken, refreshToken } = await loginWithGoogle(idToken);
-  return res
-    .status(200)
-    .json({
-      message: "login successfully",
-      success: true,
-      data: { accessToken, refreshToken },
-    });
+  return res.status(200).json({
+    message: "login successfully",
+    success: true,
+    data: { accessToken, refreshToken },
+  });
 });
 export default router;
