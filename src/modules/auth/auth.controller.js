@@ -27,8 +27,18 @@ import {
   verifyAccount,
 } from "./auth.service.js";
 import { isAuthenticated } from "../../middlewares/authentication.middleware.js";
+import rateLimit from "express-rate-limit";
 const router = Router();
-
+const limit = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  limit: 3, // Limit each IP to 3 requests per `window` (here, per 15 minutes)  
+  // standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  // legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  // handler: (req, res, next) => {
+  //   throw new Error("too many requests", { cause: 429 });
+  // }
+});
+router.use(limit); // Apply the rate limiting middleware to all requests
 //signup >> check user >> create user
 router.post(
   "/signup",
