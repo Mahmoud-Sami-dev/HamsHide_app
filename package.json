@@ -1,7 +1,7 @@
 {
-  "name": "saraha_app",
+  "name": "hamshide-app",
   "version": "1.0.0",
-  "description": "",
+  "description": "An Anonymous Feedback Engine with Secure Logic",
   "main": "src/index.js",
   "type": "module",
   "scripts": {
