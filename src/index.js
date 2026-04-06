@@ -16,7 +16,7 @@ app.use(helmet()); // set security headers
 
 const limit = rateLimit({
   windowMs: 1 * 60 * 60 * 1000, // 1 hour
-  limit: 3, // limit each IP to 3 requests per windowMs
+  limit: 100, // limit each IP to 3 requests per windowMs
   // statusCode:500,
   // message: "too many requests",
   handler: (req, res, next) => {

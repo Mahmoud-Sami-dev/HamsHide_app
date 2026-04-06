@@ -88,6 +88,7 @@ export const login = async (body) => {
     sub: userExist._id,
     role: userExist.role,
   });
+  await redisClient.set(`refreshToken:${userExist._id}`, refreshToken);
   return { accessToken, refreshToken };
 };
 
@@ -180,6 +181,8 @@ export const refreshTokenService = async (authorization) => {
   const cashedRefreshToken = await redisClient.get(
     `refreshToken:${payload.sub}`,
   );
+  console.log("cached:", cashedRefreshToken);
+  console.log("sent:", authorization);
   if (cashedRefreshToken != authorization) {
     await logoutFromAllDevices({ _id: payload.sub });
     await redisClient.del(`refreshToken:${payload.sub}`);
